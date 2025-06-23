@@ -3,77 +3,44 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Emulador Pokémon FireRed - Carregar ROM</title>
+<title>Pokémon FireRed — Emulador Web</title>
 <style>
   body {
-    margin: 0; padding: 0;
-    background: #121212;
-    color: #eee;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-  }
-  h1 {
-    margin: 12px 0;
-    font-weight: 700;
-    color: #9b59b6;
+    margin:0; padding:0; background:#121212; color:#eee;
+    font-family: Arial, sans-serif; display:flex;
+    flex-direction:column; align-items:center;
   }
   canvas {
-    image-rendering: pixelated;
-    border: 4px solid #9b59b6;
-    background: black;
-    width: 480px;
-    height: 320px;
-    max-width: 100vw;
+    width:480px; height:320px;
+    max-width:100vw; image-rendering:pixelated;
+    background:black; border:4px solid #9b59b6;
   }
   #controls {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: repeat(5, 64px);
-    grid-gap: 14px;
-    justify-content: center;
+    margin-top:10px;
+    display:grid;
+    grid-template-columns:repeat(5,64px);
+    grid-gap:10px;
+    justify-content:center;
   }
   button {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: #6a3f97;
-    border: none;
-    color: white;
-    font-weight: 700;
-    font-size: 24px;
-    box-shadow: 0 4px 0 #48286b;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.2s ease;
+    width:64px; height:64px;
+    border-radius:50%; background:#6a3f97; color:#fff;
+    font-size:24px; font-weight:bold; border:none;
+    cursor:pointer; user-select:none;
   }
-  button:active {
-    background: #a26adb;
-    box-shadow: inset 0 4px 5px #3b2261;
-  }
-  #start, #select {
-    border-radius: 24px;
-    font-size: 16px;
-    width: 100px;
-    height: 48px;
-  }
-  #fileInput {
-    margin-top: 20px;
-    color: #bbb;
-    font-size: 18px;
+  button:active { background:#a26adb; }
+  #start,#select {
+    border-radius:24px; width:120px;
+    height:48px; font-size:16px;
   }
 </style>
 </head>
 <body>
 
-<h1>Emulador Pokémon FireRed</h1>
-
-<input type="file" id="fileInput" accept=".gba" />
+<h1>Pokémon FireRed (GBA.js)</h1>
 <canvas id="screen" width="240" height="160"></canvas>
 
-<div id="controls" style="display:none;">
+<div id="controls">
   <button id="left">◀️</button>
   <button id="up">🔼</button>
   <button id="down">🔽</button>
@@ -89,129 +56,50 @@
 
 <script src="https://cdn.jsdelivr.net/gh/endrift/gbajs@master/gbajs.min.js"></script>
 <script>
+(async () => {
   const canvas = document.getElementById('screen');
-  const fileInput = document.getElementById('fileInput');
-  const controls = document.getElementById('controls');
-  let gba = null;
+  const gba = new gbajs.GBA(canvas);
 
-  function setButton(gbaInstance, id, pressed) {
-    const keyMapping = {
-      left: gbajs.KEYS.LEFT,
-      right: gbajs.KEYS.RIGHT,
-      up: gbajs.KEYS.UP,
-      down: gbajs.KEYS.DOWN,
-      a: gbajs.KEYS.A,
-      b: gbajs.KEYS.B,
-      l: gbajs.KEYS.L,
-      r: gbajs.KEYS.R,
-      start: gbajs.KEYS.START,
-      select: gbajs.KEYS.SELECT,
-    };
-    gbaInstance.setKey(keyMapping[id], pressed);
+  try {
+    const resp = await fetch('firered.gba');
+    const buf = await resp.arrayBuffer();
+    gba.loadROM(new Uint8Array(buf));
+    gba.start();
+  } catch(e) {
+    alert('Erro ao carregar a ROM: ' + e);
   }
 
-  // Espera o usuário carregar o arquivo .gba
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return alert("Nenhum arquivo selecionado!");
-
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const arrayBuffer = ev.target.result;
-      const romBytes = new Uint8Array(arrayBuffer);
-
-      if(gba) gba.stop();
-
-      gba = new gbajs.GBA(canvas);
-      gba.loadROM(romBytes);
-      gba.start();
-
-      controls.style.display = 'grid';
-    };
-    reader.readAsArrayBuffer(file);
-  });
-
-  // Configura eventos nos botões
-  document.getElementById('left').addEventListener('mousedown', e => setButton(gba, 'left', true));
-  document.getElementById('left').addEventListener('mouseup', e => setButton(gba, 'left', false));
-  document.getElementById('left').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'left', true); });
-  document.getElementById('left').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'left', false); });
-
-  document.getElementById('right').addEventListener('mousedown', e => setButton(gba, 'right', true));
-  document.getElementById('right').addEventListener('mouseup', e => setButton(gba, 'right', false));
-  document.getElementById('right').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'right', true); });
-  document.getElementById('right').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'right', false); });
-
-  document.getElementById('up').addEventListener('mousedown', e => setButton(gba, 'up', true));
-  document.getElementById('up').addEventListener('mouseup', e => setButton(gba, 'up', false));
-  document.getElementById('up').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'up', true); });
-  document.getElementById('up').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'up', false); });
-
-  document.getElementById('down').addEventListener('mousedown', e => setButton(gba, 'down', true));
-  document.getElementById('down').addEventListener('mouseup', e => setButton(gba, 'down', false));
-  document.getElementById('down').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'down', true); });
-  document.getElementById('down').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'down', false); });
-
-  document.getElementById('a').addEventListener('mousedown', e => setButton(gba, 'a', true));
-  document.getElementById('a').addEventListener('mouseup', e => setButton(gba, 'a', false));
-  document.getElementById('a').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'a', true); });
-  document.getElementById('a').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'a', false); });
-
-  document.getElementById('b').addEventListener('mousedown', e => setButton(gba, 'b', true));
-  document.getElementById('b').addEventListener('mouseup', e => setButton(gba, 'b', false));
-  document.getElementById('b').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'b', true); });
-  document.getElementById('b').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'b', false); });
-
-  document.getElementById('l').addEventListener('mousedown', e => setButton(gba, 'l', true));
-  document.getElementById('l').addEventListener('mouseup', e => setButton(gba, 'l', false));
-  document.getElementById('l').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'l', true); });
-  document.getElementById('l').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'l', false); });
-
-  document.getElementById('r').addEventListener('mousedown', e => setButton(gba, 'r', true));
-  document.getElementById('r').addEventListener('mouseup', e => setButton(gba, 'r', false));
-  document.getElementById('r').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'r', true); });
-  document.getElementById('r').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'r', false); });
-
-  document.getElementById('start').addEventListener('mousedown', e => setButton(gba, 'start', true));
-  document.getElementById('start').addEventListener('mouseup', e => setButton(gba, 'start', false));
-  document.getElementById('start').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'start', true); });
-  document.getElementById('start').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'start', false); });
-
-  document.getElementById('select').addEventListener('mousedown', e => setButton(gba, 'select', true));
-  document.getElementById('select').addEventListener('mouseup', e => setButton(gba, 'select', false));
-  document.getElementById('select').addEventListener('touchstart', e => { e.preventDefault(); setButton(gba, 'select', true); });
-  document.getElementById('select').addEventListener('touchend', e => { e.preventDefault(); setButton(gba, 'select', false); });
-
-  // Controle por teclado físico
-  const keyboardMap = {
-    ArrowLeft: 'left',
-    ArrowRight: 'right',
-    ArrowUp: 'up',
-    ArrowDown: 'down',
-    KeyZ: 'a',     // Z = A
-    KeyX: 'b',     // X = B
-    KeyA: 'l',     // A = L
-    KeyS: 'r',     // S = R
-    Enter: 'start',
-    ShiftRight: 'select',
-    ShiftLeft: 'select',
+  const keyMap = {
+    left: gbajs.KEYS.LEFT, right: gbajs.KEYS.RIGHT,
+    up: gbajs.KEYS.UP, down: gbajs.KEYS.DOWN,
+    a: gbajs.KEYS.A, b: gbajs.KEYS.B,
+    l: gbajs.KEYS.L, r: gbajs.KEYS.R,
+    start: gbajs.KEYS.START, select: gbajs.KEYS.SELECT
   };
 
-  window.addEventListener('keydown', e => {
-    if (!gba) return;
-    if(keyboardMap[e.code]) {
-      setButton(gba, keyboardMap[e.code], true);
-      e.preventDefault();
-    }
-  });
+  for (const id in keyMap) {
+    const btn = document.getElementById(id);
+    btn.addEventListener('mousedown',()=>gba.setKey(keyMap[id], true));
+    btn.addEventListener('mouseup',()=>gba.setKey(keyMap[id], false));
+    btn.addEventListener('mouseleave',()=>gba.setKey(keyMap[id], false));
+    btn.addEventListener('touchstart',e=>{e.preventDefault(); gba.setKey(keyMap[id], true);});
+    btn.addEventListener('touchend',e=>{e.preventDefault(); gba.setKey(keyMap[id], false);});
+  }
 
-  window.addEventListener('keyup', e => {
-    if (!gba) return;
-    if(keyboardMap[e.code]) {
-      setButton(gba, keyboardMap[e.code], false);
-      e.preventDefault();
-    }
+  const kb = {
+    ArrowLeft:'left', ArrowRight:'right',
+    ArrowUp:'up', ArrowDown:'down',
+    KeyZ:'a', KeyX:'b',
+    KeyA:'l', KeyS:'r',
+    Enter:'start', ShiftLeft:'select', ShiftRight:'select'
+  };
+  window.addEventListener('keydown',e=>{
+    if(kb[e.code]) { gba.setKey(keyMap[kb[e.code]], true); e.preventDefault(); }
   });
+  window.addEventListener('keyup',e=>{
+    if(kb[e.code]) { gba.setKey(keyMap[kb[e.code]], false); e.preventDefault(); }
+  });
+})();
 </script>
 
 </body>
